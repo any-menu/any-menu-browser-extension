@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "LincZero",
+  "version": "1.0",
+
+  "description": "This extension is solely designed to enhance the content-aware functionality of the AnyMenu software in a browser environment.",
+
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "any-menu-browser-extension",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*"],
+      "js": ["borderify.js"]
+    }
+  ]
+}
