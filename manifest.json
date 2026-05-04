@@ -11,7 +11,7 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "any-menu-browser-extension",
+      "id": "any-menu@linczero",
       "data_collection_permissions": {
         "required": ["none"]
       }
@@ -20,7 +20,7 @@
 
   "content_scripts": [
     {
-      "matches": ["*://*"],
+      "matches": ["<all_urls>"],
       "js": ["borderify.js"]
     }
   ]
