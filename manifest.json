@@ -1,10 +1,8 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "AnyMenu Helper",
   "version": "1.0",
-
   "description": "This extension is solely designed to enhance the content-aware functionality of the AnyMenu software in a browser environment.",
-
   "icons": {
     "48": "icons/border-48.png"
   },
@@ -12,10 +10,17 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "any-menu@linczero",
-      "data_collection_permissions": {
-        "required": ["none"]
-      }
+      "strict_min_version": "109.0"
     }
+  },
+
+  "permissions": [
+    "storage"
+  ],
+
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": false
   },
 
   "content_scripts": [

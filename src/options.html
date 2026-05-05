@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AnyMenu 设置</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; width: 300px; color: #333; }
+    .setting-item { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    label { font-weight: 500; }
+    #status { color: #2ecc71; font-size: 14px; min-height: 20px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>扩展设置</h2>
+  
+  <div class="setting-item">
+    <label for="is_debug">开启 Debug 面板</label>
+    <input type="checkbox" id="is_debug">
+  </div>
+
+  <div class="setting-item">
+    <label for="is_bridge">开启与 AnyMenu App 通信</label>
+    <input type="checkbox" id="is_bridge">
+  </div>
+
+  <div id="status"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

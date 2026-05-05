@@ -12,24 +12,34 @@
  */
 
 (() => {
-  // Exported API
-  const API = {
-    mount,
-    unmount,
-    isMounted: () => !!window.__AnyMenuHelperDebugMounted,
-  };
+  // 是否注入/启用
+  {
+    if (window.__AnyMenuHelperDebugMounted) return; // 避免重复注入
 
-  // expose
-  window.AnyMenuHelperDebug = API;
+    if (typeof chrome !== 'undefined' && chrome.storage) { // 设置中是否启用
+      chrome.storage.sync.get({ is_debug: false }, (res) => {
+        if (res.is_debug) run();
+      });
+    } else { // 兼容非浏览器扩展环境（例如直接通过 <script> 引入测试）
+      run();
+    }
 
-  let root = null;
-  let styleEl = null;
-  let intervalId = null;
-
-  function mount() {
-    // 避免重复注入
-    if (window.__AnyMenuHelperDebugMounted) return;
     window.__AnyMenuHelperDebugMounted = true;
+  }
+
+  // 启用
+  function run() {
+    // Exported API
+    const API = {
+      isMounted: () => !!window.__AnyMenuHelperDebugMounted,
+    };
+
+    // expose
+    window.AnyMenuHelperDebug = API;
+
+    let root = null;
+    let styleEl = null;
+    let intervalId = null;
 
     const state = {
       url: location.href,
@@ -600,25 +610,4 @@
 
     console.log("[AnyMenu Helper] Debug panel mounted");
   }
-
-  function unmount() {
-    try {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
-      if (root) {
-        root.remove();
-        root = null;
-      }
-      if (styleEl) {
-        styleEl.remove();
-        styleEl = null;
-      }
-    } finally {
-      window.__AnyMenuHelperDebugMounted = false;
-    }
-  }
-
-  mount() // 临时，不一定加载。除非开了 debug 选项
 })();
