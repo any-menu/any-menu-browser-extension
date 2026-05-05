@@ -1,0 +1,83 @@
+name: Build and Release Extension
+
+on:
+  push:
+    branches: [main]
+    tags: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  # 构建
+  build:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint extension
+        run: npx web-ext lint
+      - name: Build extension
+        run: npx web-ext build
+
+      # 上传临时产物（web-ext 默认将产物输出在 web-ext-artifacts/ 目录下）
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-ext-artifact
+          path: web-ext-artifacts/
+
+  # 发布
+  release:
+    name: Release
+    needs: build
+    if: github.ref_type == 'tag' && !contains(github.ref_name, '-beta')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-ext-artifact
+          path: web-ext-artifacts/
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "web-ext-artifacts/*.zip"
+          generateReleaseNotes: true
+          name: "Release ${{ github.ref_name }}"
+          prerelease: false # or ${{ endsWith(github.ref_name, 'beta') }} # 是否预发布
+          makeLatest: true # or ${{ !endsWith(github.ref_name, 'beta') }} # 是否最后一个版本
+
+  # 预发布
+  release_beta:
+    name: Release Beta
+    needs: build
+    if: github.ref_type == 'tag' && contains(github.ref_name, '-beta')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-ext-artifact
+          path: web-ext-artifacts/
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "web-ext-artifacts/*.zip"
+          generateReleaseNotes: true
+          name: "Release ${{ github.ref_name }}"
+          prerelease: true # or ${{ endsWith(github.ref_name, 'beta') }} # 是否预发布
+          makeLatest: false # or ${{ !endsWith(github.ref_name, 'beta') }} # 是否最后一个版本
