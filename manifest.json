@@ -21,7 +21,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/debug.js", "src/main.js"]
+      "js": ["src/debug.js", "src/bridge.js", "src/main.js"]
     }
   ]
 }

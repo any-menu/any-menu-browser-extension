@@ -1,15 +1,12 @@
+/**
+ * AnyMenu Helper Main
+ */
 (() => {
-  // Avoid injecting twice
+  // 避免重复注入
   if (window.__AnyMenuHelperMainInjected) return;
   window.__AnyMenuHelperMainInjected = true;
 
-  if (!window.AnyMenuHelperDebug?.mount) {
-    console.warn("[AnyMenu Helper] debug.js not loaded; cannot mount debug panel.");
-    return;
-  }
-
-  window.AnyMenuHelperDebug.mount();
+  // example
+  document.body.style.border = "5px solid red";
+  console.log("[AnyMenu Main] Script injected.");
 })();
-
-// example
-document.body.style.border = "5px solid red";

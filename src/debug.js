@@ -27,7 +27,7 @@
   let intervalId = null;
 
   function mount() {
-    // Avoid injecting twice (SPA / bfcache / hot reload)
+    // 避免重复注入
     if (window.__AnyMenuHelperDebugMounted) return;
     window.__AnyMenuHelperDebugMounted = true;
 
@@ -619,4 +619,6 @@
       window.__AnyMenuHelperDebugMounted = false;
     }
   }
+
+  mount() // 临时，不一定加载。除非开了 debug 选项
 })();
