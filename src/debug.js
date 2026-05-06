@@ -29,17 +29,11 @@
 
   // 启用
   function run() {
-    // Exported API
-    const API = {
-      isMounted: () => !!window.__AnyMenuHelperDebugMounted,
-    };
-
-    // expose
-    window.AnyMenuHelperDebug = API;
-
-    let root = null;
-    let styleEl = null;
-    let intervalId = null;
+    // Exported API // 暂时不用
+    // const API = {
+    //   isMounted: () => !!window.__AnyMenuHelperDebugMounted,
+    // };
+    // window.AnyMenuHelperDebug = API;
 
     const state = {
       url: location.href,
@@ -229,89 +223,92 @@
       state.lastUpdatedAt = new Date().toISOString();
     }
 
-    // ---------- UI ----------
-    root = document.createElement("div");
+    
+    // styleEl
+    {
+      const styleEl = document.createElement("style");
+      styleEl.textContent = `
+  #anymenu-helper-panel{
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: 360px;
+    max-height: 70vh;
+    z-index: 2147483647;
+    color: #e8e8e8;
+    background: rgba(20, 20, 20, .92);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.35);
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    backdrop-filter: blur(6px);
+  }
+  #anymenu-helper-panel * { box-sizing: border-box; }
+  #anymenu-helper-header{
+    cursor: move;
+    padding: 10px 10px 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  #anymenu-helper-title{
+    font-weight: 700;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  #anymenu-helper-actions{
+    display:flex; gap:6px; align-items:center;
+  }
+  .anymenu-btn{
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.08);
+    color: #e8e8e8;
+    padding: 3px 6px;
+    border-radius: 6px;
+    cursor:pointer;
+  }
+  .anymenu-btn:hover{ background: rgba(255,255,255,.14); }
+  #anymenu-helper-body{
+    padding: 10px;
+    overflow: auto;
+    max-height: calc(70vh - 44px);
+  }
+  .anymenu-section{ margin-bottom: 10px; }
+  .anymenu-section h3{
+    margin: 0 0 6px 0;
+    font-size: 12px;
+    color: #fff;
+  }
+  .anymenu-kv{
+    display:grid;
+    grid-template-columns: 84px 1fr;
+    gap: 4px 8px;
+  }
+  .anymenu-kv .k{ color: #a9a9a9; }
+  .anymenu-kv .v{
+    color: #e8e8e8;
+    word-break: break-word;
+  }
+  .anymenu-pre{
+    margin: 0;
+    padding: 6px;
+    background: rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .anymenu-row{ display:flex; gap:6px; flex-wrap: wrap; }
+  .anymenu-muted{ color:#a9a9a9; }
+      `;
+      document.documentElement.appendChild(styleEl);
+    }
+
+    // 面板 - 总
+    const root = document.createElement("div");
     root.id = "anymenu-helper-panel";
-
-    styleEl = document.createElement("style");
-    styleEl.textContent = `
-#anymenu-helper-panel{
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 360px;
-  max-height: 70vh;
-  z-index: 2147483647;
-  color: #e8e8e8;
-  background: rgba(20, 20, 20, .92);
-  border: 1px solid rgba(255,255,255,.15);
-  border-radius: 10px;
-  box-shadow: 0 8px 30px rgba(0,0,0,.35);
-  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  backdrop-filter: blur(6px);
-}
-#anymenu-helper-panel * { box-sizing: border-box; }
-#anymenu-helper-header{
-  cursor: move;
-  padding: 10px 10px 8px 10px;
-  border-bottom: 1px solid rgba(255,255,255,.1);
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-}
-#anymenu-helper-title{
-  font-weight: 700;
-  font-size: 12px;
-  white-space: nowrap;
-}
-#anymenu-helper-actions{
-  display:flex; gap:6px; align-items:center;
-}
-.anymenu-btn{
-  border: 1px solid rgba(255,255,255,.2);
-  background: rgba(255,255,255,.08);
-  color: #e8e8e8;
-  padding: 3px 6px;
-  border-radius: 6px;
-  cursor:pointer;
-}
-.anymenu-btn:hover{ background: rgba(255,255,255,.14); }
-#anymenu-helper-body{
-  padding: 10px;
-  overflow: auto;
-  max-height: calc(70vh - 44px);
-}
-.anymenu-section{ margin-bottom: 10px; }
-.anymenu-section h3{
-  margin: 0 0 6px 0;
-  font-size: 12px;
-  color: #fff;
-}
-.anymenu-kv{
-  display:grid;
-  grid-template-columns: 84px 1fr;
-  gap: 4px 8px;
-}
-.anymenu-kv .k{ color: #a9a9a9; }
-.anymenu-kv .v{
-  color: #e8e8e8;
-  word-break: break-word;
-}
-.anymenu-pre{
-  margin: 0;
-  padding: 6px;
-  background: rgba(0,0,0,.35);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 8px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-.anymenu-row{ display:flex; gap:6px; flex-wrap: wrap; }
-.anymenu-muted{ color:#a9a9a9; }
-    `;
-    document.documentElement.appendChild(styleEl);
-
     root.innerHTML = `
       <div id="anymenu-helper-header">
         <div id="anymenu-helper-title">AnyMenu Helper · Debug Panel</div>
@@ -332,24 +329,27 @@
     let hoverEnabled = true;
     let hidden = false;
 
-    function escapeHtml(s) {
-      return String(s ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function formatCompact(obj) {
-      try {
-        return JSON.stringify(obj, null, 2);
-      } catch {
-        return String(obj);
-      }
-    }
-
+    // 面板 - 主体 (排除标题)
     function render() {
+      // 避免html转义
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      // 定义如何文本形式显示对象
+      function formatCompact(obj) {
+        try {
+          return JSON.stringify(obj, null, 2);
+        } catch {
+          return String(obj);
+        }
+      }
+
       const meta = state.meta || {};
       const focus = state.focusInfo || {};
       const hover = state.hoverInfo || {};
@@ -416,51 +416,63 @@
       `;
     }
 
-    function printToConsole(type) {
-      if (type === "page") {
-        console.group("[AnyMenu Helper] Page");
-        console.log("url:", state.url);
-        console.log("title:", state.title);
-        console.log("updatedAt:", state.lastUpdatedAt);
-        console.groupEnd();
-        return;
-      }
-      if (type === "meta") {
-        console.group("[AnyMenu Helper] Meta");
-        console.dir(state.meta);
-        console.groupEnd();
-        return;
-      }
-      if (type === "jsonld") {
-        console.group("[AnyMenu Helper] JSON-LD");
-        console.dir(state.meta?.__jsonLd || []);
-        console.groupEnd();
-        return;
-      }
-      if (type === "selection") {
-        console.group("[AnyMenu Helper] Selection");
-        console.log("text:", state.selectionText);
-        console.log("html:", state.selectionHtml);
-        console.groupEnd();
-        return;
-      }
-      if (type === "focus") {
-        console.group("[AnyMenu Helper] Focus");
-        console.dir(state.focusInfo);
-        console.groupEnd();
-        return;
-      }
-      if (type === "hover") {
-        console.group("[AnyMenu Helper] Hover");
-        console.dir(state.hoverInfo);
-        console.groupEnd();
-        return;
-      }
-    }
-
+    // 按钮
     root.addEventListener("click", (e) => {
       const btn = e.target.closest("button");
       if (!btn) return;
+
+      // 控制台中打印
+      function printToConsole(type) {
+        if (type === "page") {
+          console.group("[AnyMenu Helper] Page");
+          console.log("url:", state.url);
+          console.log("title:", state.title);
+          console.log("updatedAt:", state.lastUpdatedAt);
+          console.groupEnd();
+          return;
+        }
+        if (type === "meta") {
+          console.group("[AnyMenu Helper] Meta");
+          console.dir(state.meta);
+          console.groupEnd();
+          return;
+        }
+        if (type === "jsonld") {
+          console.group("[AnyMenu Helper] JSON-LD");
+          console.dir(state.meta?.__jsonLd || []);
+          console.groupEnd();
+          return;
+        }
+        if (type === "selection") {
+          console.group("[AnyMenu Helper] Selection");
+          console.log("text:", state.selectionText);
+          console.log("html:", state.selectionHtml);
+          console.groupEnd();
+          return;
+        }
+        if (type === "focus") {
+          console.group("[AnyMenu Helper] Focus");
+          console.dir(state.focusInfo);
+          console.groupEnd();
+          return;
+        }
+        if (type === "hover") {
+          console.group("[AnyMenu Helper] Hover");
+          console.dir(state.hoverInfo);
+          console.groupEnd();
+          return;
+        }
+      }
+
+      // 复制文本到剪贴板
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          console.log("[AnyMenu Helper] Copied selection text to clipboard");
+        } catch (err) {
+          console.warn("[AnyMenu Helper] Clipboard copy failed:", err);
+        }
+      }
 
       const action = btn.getAttribute("data-action");
       const printType = btn.getAttribute("data-print");
@@ -489,16 +501,7 @@
       }
     });
 
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        console.log("[AnyMenu Helper] Copied selection text to clipboard");
-      } catch (err) {
-        console.warn("[AnyMenu Helper] Clipboard copy failed:", err);
-      }
-    }
-
-    // Track selection changes
+    // 追踪选区变化
     document.addEventListener(
       "selectionchange",
       () => {
@@ -509,7 +512,7 @@
       true
     );
 
-    // Track focus changes
+    // 追踪焦点变化
     window.addEventListener(
       "focusin",
       () => {
@@ -520,7 +523,7 @@
       true
     );
 
-    // Track hover element
+    // 追踪悬停元素
     window.addEventListener(
       "mousemove",
       (e) => {
@@ -530,14 +533,14 @@
       true
     );
 
-    // Throttled render timer for hover updates
+    // 悬停更新的节流渲染定时器
     intervalId = window.setInterval(() => {
       if (!hoverEnabled) return;
       touchUpdatedAt();
       render();
     }, 200);
 
-    // URL changes in SPAs: observe via history
+    // SPA 中的 URL 变化：通过 history 观察
     const _pushState = history.pushState;
     const _replaceState = history.replaceState;
 
@@ -560,7 +563,7 @@
     };
     window.addEventListener("popstate", onHistoryChange);
 
-    // Dragging panel
+    // 面板 - 标题，拖拽功能
     (() => {
       let dragging = false;
       let startX = 0,
