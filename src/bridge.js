@@ -1,6 +1,10 @@
 /**
  * AnyMenu Helper Tauri Bridge
  * 负责主动/被动将页面数据（如选区）传递给 Tauri 应用程序
+ * 
+ * - 监听选择完毕事件，主动发送实践给 Tauri 后端
+ * - 监听选取变化，主动发送事件给 Tauri 后端
+ * - 被动暴露全局 API，供 Tauri 后端通过 execute_script 主动调用获取
  */
 (() => {
   // 是否注入/启用
@@ -25,7 +29,7 @@
       selectionHtml: ""
     };
 
-    // 1. 数据收集 (防抖处理，避免频繁通信)
+    // 数据收集 (防抖处理，避免频繁通信)
     let timeout;
     document.addEventListener("selectionchange", () => {
       clearTimeout(timeout);
@@ -50,7 +54,7 @@
       }, 300);
     });
 
-    // 2. 【被动通信】暴露全局 API，供 Tauri 后端通过 execute_script 主动调用获取
+    // 【被动通信】暴露全局 API，供 Tauri 后端通过 execute_script 主动调用获取
     window.AnyMenuTauriAPI = {
       getSelection: () => {
         return {
