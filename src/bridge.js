@@ -70,12 +70,14 @@
       });
     }
 
-    // 事件 - 选择改变 (暂时不需要，若需要使用最好加防抖)
+    // --------------- 实践 ---------------
+
+    // 事件1 - 选择改变 (暂时不需要，若需要使用最好加防抖)
     // document.addEventListener("selectionchange", () => {
     //   if (updateSelectionInfo()) sendSelectionToApp();
     // });
 
-    // 事件 - 按键状态 flag
+    // 事件2 - 按键状态 flag
     let alt_press_flag = false;
     let ctrl_press_flag = false;
     let shift_press_flag = false;
@@ -87,7 +89,7 @@
       if (e.key === "Meta") meta_press_flag = true;
     });
 
-    // 事件 - 键盘方式结束选择
+    // 事件3 - 键盘方式结束选择
     document.addEventListener("keyup", (e) => {
       if (e.key === "Alt") alt_press_flag = false;
       if (e.key === "Control") ctrl_press_flag = false;
@@ -100,7 +102,7 @@
       if (updateSelectionInfo()) sendSelectionToApp();
     });
 
-    // 事件 - 鼠标方式结束选择
+    // 事件4 - 鼠标方式结束选择
     document.addEventListener("mouseup", (e) => {
       // 仅限鼠标左键，且没有按下 Shift/Ctrl/Alt/Meta 组合键
       if (e.button !== 0) return;
@@ -108,6 +110,9 @@
 
       if (updateSelectionInfo()) sendSelectionToApp();
     });
+
+    // 事件5 - 鼠标双击方式结束选择
+    // document.addEventListener("dblclick", (e) => {})
 
     console.log("[AnyMenu Bridge] App communication bridge initialized.");
   }
