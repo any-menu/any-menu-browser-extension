@@ -74,6 +74,8 @@
 
     // --------------- 实践 ---------------
 
+    // TODO 当选区从有清空时，需要触发清空事件，通知 App
+
     // 事件1 - 选择改变 (暂时不需要，若需要使用最好加防抖)
     // document.addEventListener("selectionchange", () => {
     //   if (updateSelectionInfo()) sendSelectionToApp();

@@ -2,7 +2,54 @@
 
 常用命令/备注:
 
-## Firefox 调试页
+## 使用
+
+### 上架浏览器的扩展商店
+
+详见对应平台 (Chrome / Edge / Firefox 等) 的文档
+
+### 让用户通过扩展文件直接安装
+
+未上架的情况下可以使用该方式安装
+
+(但用户可能会对此产生担忧，害怕风险，此处仅供参考)
+
+(*by GPT 5.4*)
+
+Chrome 和 Firefox 的限制不一样
+
+- Chrome / Edge（Chromium 系）
+  - 普通用户想“直接安装”你打包好的扩展，基本不能靠一个 zip 让用户双击安装。
+  - 非商店分发通常只有几种路：
+    - 开发者模式手动加载解压目录（详见开发者方式，排除）
+    - 企业/组织策略强制安装
+    - 自建更新源 + .crx，但现代 Chrome 对个人分发限制很多，普通用户场景通常不实用
+  - 所以对大众用户来说，**不上 Chrome Web Store 几乎没有顺滑安装方案**。
+
+- Firefox
+  - 比 Chrome 宽松一些，但也分情况：
+    - 临时加载（详见开发者方式，排除）
+    - 已签名扩展的 XPI 文件，用户可以下载安装
+    - 未签名扩展通常只有开发版 / ESR 某些受控环境才可行，普通稳定版 Firefox 不适合
+  - 所以 Firefox 想给普通用户安装，现实可行方案通常是：把扩展打包成 .xpi 并经过 Mozilla 签名，然后自行分发，不一定非要上 AMO 公开商店展示。
+
+## 使用 (开发者方式)
+
+### 利用 web-ext run
+
+使用 `web-ext` 工具，运行 `web-ext run` 即可
+
+### package.json 再简化 web-ext
+
+我也将该方式封装成了一下 (方便未接触该工具者使用):
+
+```json
+"start": "web-ext run",       // 在 Firefox 中启动扩展进行测试
+"lint": "web-ext lint",       // 检查扩展代码和 manifest.json 中的错误
+"build": "web-ext build"      // 打包扩展为 .zip 文件，用于发布
+```
+
+### Firefox 调试页
 
 url: `about:debugging`
 此 Firefox -> 临时加载附加组建，然后选中 `manifest.json` 即可
