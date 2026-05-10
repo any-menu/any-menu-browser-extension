@@ -2,10 +2,10 @@ name: Build and Release Extension
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     tags: ['**']
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   # 构建
