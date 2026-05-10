@@ -54,6 +54,11 @@
 
     // 主动通信。通过 HTTP POST 发送给本地的 App 程序
     const sendSelectionToApp = () => {
+      // TODO 增加通信规范，AnyMenu 那边应该设计并编写一个 RPC 接口规范
+      //   该规范应增强通用性。允许浏览器扩展、Obsidian插件、AI Agent、自动化脚本等多种控制途径
+      // TODO 此处应该增加双向通信功能。
+      //   当然，非双向能更好地方便多种不同类型的来源使用同一端口号通知 AnyMenu。
+      //   改双向通信的话 AnyMenu 那应该弄两个端口分别与浏览器和 Obsidian 进行 websocket 通信
       const payload = {
         source: 'BROWSER_EXTENSION',
         text: selectionText,
