@@ -54,17 +54,19 @@
 
     // 主动通信。通过 HTTP POST 发送给本地的 App 程序
     const sendSelectionToApp = () => {
-      if (is_debug) console.log('Selected text, send to app:', { selectionText, selectionHtml });
+      const payload = {
+        source: 'BROWSER_EXTENSION',
+        text: selectionText,
+        html: selectionHtml,
+      }
+      if (is_debug) console.log('Selected text, send to app:', payload);
 
       fetch(APP_SERVER_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          text: selectionText,
-          html: selectionHtml
-        })
+        body: JSON.stringify(payload)
       }).catch(err => {
         // App 可能没打开，忽略
       });
@@ -152,6 +154,7 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            source: 'BROWSER_EXTENSION',
             text: selectionText,
             html: selectionHtml
           })
