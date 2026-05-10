@@ -76,9 +76,12 @@
 
     // TODO 当选区从有清空时，需要触发清空事件，通知 App
 
-    // 事件1 - 选择改变 (暂时不需要，若需要使用最好加防抖)
+    // 事件1 - 选择改变 (带防抖) (暂时不需要)
     // document.addEventListener("selectionchange", () => {
-    //   if (updateSelectionInfo()) sendSelectionToApp();
+    //   clearTimeout(timeout);
+    //   timeout = setTimeout(() => {
+    //     if (updateSelectionInfo()) sendSelectionToApp();
+    //   }, 300);
     // });
 
     // 事件2 - 按键状态 flag
@@ -120,54 +123,4 @@
 
     console.log("[AnyMenu Bridge] App communication bridge initialized.");
   }
-
-  /*
-   * 启用
-   * @deprecated 旧版，变化时通知，选择过程中也会通知
-   
-  function run2() {
-    const APP_SERVER_URL = "http://127.0.0.1:41667/selection";
-
-    // 数据收集 (防抖处理，避免频繁通信)
-    let timeout;
-    document.addEventListener("selectionchange", () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        const sel = window.getSelection();
-        if (!sel) return;
-        
-        const selectionText = sel.toString();
-        let selectionHtml = "";
-        
-        if (sel.rangeCount > 0) {
-          const div = document.createElement("div");
-          div.appendChild(sel.getRangeAt(0).cloneContents());
-          selectionHtml = div.innerHTML;
-        }
-
-        // 如果没有选中文本，可以选择不发送
-        if (!selectionText.trim()) return;
-
-        // 【主动通信】通过 HTTP POST 发送给本地的 App 程序
-        // console.log('Selected text, send to app:', { selectionText, selectionHtml });
-        fetch(APP_SERVER_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            source: 'BROWSER_EXTENSION',
-            text: selectionText,
-            html: selectionHtml
-          })
-        }).catch(err => {
-          // App 可能没打开，忽略
-        });
-
-      }, 300); // 300ms 防抖
-    });
-
-    console.log("[AnyMenu Bridge] App communication bridge initialized.");
-  }
-  */
 })();
