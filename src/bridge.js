@@ -6,7 +6,14 @@
  * - 监听选取变化，主动发送事件给 Tauri 后端
  * - 被动暴露全局 API，供 Tauri 后端通过 execute_script 主动调用获取
  */
-(() => {
+
+const option = {
+  is_debug: false,
+  is_bridge: true,
+  app_port: "41667",
+}
+
+;(() => {
   // 是否注入/启用
   {
     if (window.__AnyMenuHelperBridgeInjected) return; // 避免重复注入
@@ -17,7 +24,10 @@
         is_bridge: true,
         app_port: "41667",
       }, (res) => {
-        if (res.is_bridge) run(res.app_port, res.is_debug);
+        option.is_debug = res.is_debug;
+        option.is_bridge = res.is_bridge;
+        option.app_port = res.app_port;
+        if (res.is_bridge) run();
       });
     } else { // 兼容非浏览器扩展环境（例如直接通过 <script> 引入测试）
       run()
@@ -30,8 +40,9 @@
    * 启用
    * 当选中文本后，主动通过 HTTP POST 发送给本地的 Tauri 程序
    */
-  function run(app_port = "41667", is_debug = false) {
-    const APP_SERVER_URL = `http://127.0.0.1:${app_port}/selection`;
+  function run() {
+    const app_server_url = `http://127.0.0.1:${option.app_port}/`;
+    let app_websocket = null;
 
     // 选区信息
     let selectionText = "";
@@ -66,9 +77,9 @@
         text: selectionText,
         html: selectionHtml,
       }
-      if (is_debug) console.log('Selected text, send to app:', payload);
+      if (option.is_debug) console.log('Selected text, send to app:', payload);
 
-      fetch(APP_SERVER_URL, {
+      fetch(`${app_server_url}selection`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -77,6 +88,51 @@
       }).catch(err => {
         // App 可能没打开，忽略
       });
+    }
+
+    // TODO 这里的代码逻辑应该在 Background Script / Service Worker（后台脚本/服务工作线程）
+    //   而非在 Content Scripts（内容脚本）
+    //   不要让多个网页都与本地应用建立联系
+    // 初始化并建立 WebSocket 连接
+    const connectToApp = async () => {
+      try {
+        // 1. 向固定端口请求分配一个新的 WebSocket 临时通信端口
+        const res = await fetch(`${app_server_url}new_websocket`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
+        const wsPort = await res.json();
+        if (option.is_debug) console.log("Negotiated WebSocket port:", wsPort);
+
+        // 2. 使用返回的端口建立 WebSocket 连接
+        app_websocket = new WebSocket(`ws://127.0.0.1:${wsPort}/`);
+
+        // 3. 监听连接建立事件 (客户端主动发消息)
+        app_websocket.onopen = () => {
+          if (option.is_debug) console.log("WebSocket connected to AnyMenu app!");
+          
+          // 连接建立后，客户端主动向服务端发送一条验证消息
+          app_websocket.send("Hello from Browser Extension!");
+        };
+
+        // 4. 监听服务端发来的消息
+        app_websocket.onmessage = (event) => {
+          if (option.is_debug) console.log("Received message from app:", event.data);
+        };
+
+        app_websocket.onclose = () => {
+          if (option.is_debug) console.log("WebSocket connection closed.");
+          app_websocket = null;
+          // 可选：在这里添加断线重连逻辑
+          // setTimeout(connectToApp, 5000); 
+        };
+
+        app_websocket.onerror = (err) => {
+          if (option.is_debug) console.error("WebSocket error:", err);
+        };
+
+      } catch (err) {
+        if (option.is_debug) console.log("App may not be running. Failed to setup WebSocket:", err);
+      }
     }
 
     // --------------- 实践 ---------------
@@ -128,6 +184,6 @@
     // 事件5 - 鼠标双击方式结束选择
     // document.addEventListener("dblclick", (e) => {})
 
-    console.log("[AnyMenu Bridge] App communication bridge initialized.");
+    if (option.is_debug) console.log("[AnyMenu Bridge] App communication bridge initialized.");
   }
 })();
