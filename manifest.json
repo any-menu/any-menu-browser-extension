@@ -19,14 +19,19 @@
   ],
 
   "options_ui": {
-    "page": "src/options.html",
+    "page": "src/options/options.html",
     "open_in_tab": false
+  },
+
+  "background": {
+    "service_worker": "src/background/background.js",
+    "scripts": ["src/background/background.js"]
   },
 
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/debug.js", "src/bridge.js", "src/main.js"]
+      "js": ["src/content/debug.js", "src/content/bridge.js", "src/content/main.js"]
     }
   ]
 }
