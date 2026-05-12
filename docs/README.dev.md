@@ -99,3 +99,28 @@ V3 的兼容性与老浏览器支持：
 - 现代浏览器强制要求：虽然不支持老浏览器，但这是必经之路。
   Chrome 和 Edge 已经彻底弃用 Manifest V2（2024年下半年开始强制下架/禁用 V2 扩展）。
   Firefox 虽然还在维护 V2，但也已全面转向 V3。因此，坚持使用 V3 是唯一正确的选择。
+
+## 调试
+
+不同类型的脚本的调试方法不同
+
+- 内容脚本: 每个网页都会加载，其日志输出就在控制台中
+- 选项页脚本: 进入选项设置页后才会加载，其日志也会输出到此页的控制台
+- 后台脚本: 这个的日志输出不会出现在常规网页中，需要另行调试，详见下文
+
+其中对于后台脚本的输出:
+
+(1) 在 Chrome / Edge 中
+
+- 在地址栏输入 chrome://extensions/（Edge 是 edge://extensions/）并回车。
+- 确保右上角的 “开发者模式” (Developer mode) 是开启状态。
+- 找到你的扩展卡片，你会看到一行字：“检查视图：Service Worker” (Inspect views: service worker)。
+- 点击这蓝色的 service worker 字样，就会弹出一个全新的独立 F12 开发者工具窗口。
+- 在这个新窗口的 Console 面板里，你就能看到 background.js 中打印的所有 console.log 了
+
+(2) 在 Firefox 中
+
+- 在地址栏输入 about:debugging 并回车。
+- 点击左侧的 “此 Firefox” (This Firefox)。
+- 找到你的扩展，点击旁边的 “检查” (Inspect) 按钮。
+- 这会打开一个开发者工具窗口，切换到 控制台 (Console) 标签页，这里就是后台脚���的输出位置。

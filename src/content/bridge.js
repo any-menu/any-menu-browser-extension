@@ -7,6 +7,7 @@
  * - 被动暴露全局 API，供 Tauri 后端通过 execute_script 主动调用获取
  */
 
+// 缓存全局信息
 const option = {
   is_debug: false,
   is_bridge: true,
@@ -14,7 +15,7 @@ const option = {
 }
 
 ;(() => {
-  // 是否注入/启用
+  // 是否注入/启用、加载配置
   {
     if (window.__AnyMenuHelperBridgeInjected) return; // 避免重复注入
 
@@ -42,11 +43,11 @@ const option = {
    */
   function run() {
     const app_server_url = `http://127.0.0.1:${option.app_port}/`;
-    let app_websocket = null;
 
     // 选区信息
     let selectionText = "";
     let selectionHtml = "";
+    // 获取当前的选取信息
     const updateSelectionInfo = () => {
       const sel = window.getSelection();
       if (!sel) return false; // 如果没有选中文本，false
@@ -60,11 +61,12 @@ const option = {
       }
 
       if (!selectionText.trim()) return false; // 如果没有选中文本，false
+      console.log("Updated selection info:", { selectionText, selectionHtml });
       return true;
     }
 
     // 主动通信。通过 HTTP POST 发送给本地的 App 程序
-    const sendSelectionToApp = () => {
+    const sendSelectionToApp2 = () => {
       // 结构和规范详见:
       //   AnyMenu 的 src/Tauri/src-tauri/src/http_server.rs 中的定义
       // 
@@ -76,6 +78,9 @@ const option = {
         source: 'BROWSER_EXTENSION',
         text: selectionText,
         html: selectionHtml,
+        // is_show: true, // TODO
+        // pos_x: 0, // 相对于电脑屏幕而非浏览器窗口
+        // pos_y: 0,
       }
       if (option.is_debug) console.log('Selected text, send to app:', payload);
 
@@ -85,105 +90,83 @@ const option = {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload)
-      }).catch(err => {
+      }).catch(_err => {
         // App 可能没打开，忽略
       });
     }
 
-    // TODO 这里的代码逻辑应该在 Background Script / Service Worker（后台脚本/服务工作线程）
-    //   而非在 Content Scripts（内容脚本）
-    //   不要让多个网页都与本地应用建立联系
-    // 初始化并建立 WebSocket 连接
-    const connectToApp = async () => {
-      try {
-        // 1. 向固定端口请求分配一个新的 WebSocket 临时通信端口
-        const res = await fetch(`${app_server_url}new_websocket`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        
-        const wsPort = await res.json();
-        if (option.is_debug) console.log("Negotiated WebSocket port:", wsPort);
-
-        // 2. 使用返回的端口建立 WebSocket 连接
-        app_websocket = new WebSocket(`ws://127.0.0.1:${wsPort}/`);
-
-        // 3. 监听连接建立事件 (客户端主动发消息)
-        app_websocket.onopen = () => {
-          if (option.is_debug) console.log("WebSocket connected to AnyMenu app!");
-          
-          // 连接建立后，客户端主动向服务端发送一条验证消息
-          app_websocket.send("Hello from Browser Extension!");
-        };
-
-        // 4. 监听服务端发来的消息
-        app_websocket.onmessage = (event) => {
-          if (option.is_debug) console.log("Received message from app:", event.data);
-        };
-
-        app_websocket.onclose = () => {
-          if (option.is_debug) console.log("WebSocket connection closed.");
-          app_websocket = null;
-          // 可选：在这里添加断线重连逻辑
-          // setTimeout(connectToApp, 5000); 
-        };
-
-        app_websocket.onerror = (err) => {
-          if (option.is_debug) console.error("WebSocket error:", err);
-        };
-
-      } catch (err) {
-        if (option.is_debug) console.log("App may not be running. Failed to setup WebSocket:", err);
+    // 主动通信2。通过消息机制发送给后台脚本，后台脚本再通过 ws 发送给 App 程序
+    const sendSelectionToApp = () => {
+      const payload = {
+        source: 'BROWSER_EXTENSION',
+        text: selectionText,
+        html: selectionHtml,
+        // is_show: true, // TODO
+        // pos_x: 0, // 相对于电脑屏幕而非浏览器窗口
+        // pos_y: 0,
       }
+      if (option.is_debug) console.log('Selected text, send to background script:', payload);
+
+      // 通过消息机制发送给后台脚本
+      chrome.runtime.sendMessage({
+        action: "SEND_TO_APP",
+        payload,
+        option,
+      });
     }
 
-    // --------------- 实践 ---------------
+    // 行为与事件检测
+    {
 
-    // TODO 当选区从有清空时，需要触发清空事件，通知 App
+      // TODO 当选区从有清空时，需要触发清空事件，通知 App
 
-    // 事件1 - 选择改变 (带防抖) (暂时不需要)
-    // document.addEventListener("selectionchange", () => {
-    //   clearTimeout(timeout);
-    //   timeout = setTimeout(() => {
-    //     if (updateSelectionInfo()) sendSelectionToApp();
-    //   }, 300);
-    // });
+      // 事件1 - 选择改变 (带防抖) (暂时不需要)
+      // document.addEventListener("selectionchange", () => {
+      //   clearTimeout(timeout);
+      //   timeout = setTimeout(() => {
+      //     if (updateSelectionInfo()) sendSelectionToApp();
+      //   }, 300);
+      // });
 
-    // 事件2 - 按键状态 flag
-    let alt_press_flag = false;
-    let ctrl_press_flag = false;
-    let shift_press_flag = false;
-    let meta_press_flag = false;
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Alt") alt_press_flag = true;
-      if (e.key === "Control") ctrl_press_flag = true;
-      if (e.key === "Shift") shift_press_flag = true;
-      if (e.key === "Meta") meta_press_flag = true;
-    });
+      // 事件2 - 按键状态 flag
+      let alt_press_flag = false;
+      let ctrl_press_flag = false;
+      let shift_press_flag = false;
+      let meta_press_flag = false;
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Alt") alt_press_flag = true;
+        if (e.key === "Control") ctrl_press_flag = true;
+        if (e.key === "Shift") shift_press_flag = true;
+        if (e.key === "Meta") meta_press_flag = true;
+      });
 
-    // 事件3 - 键盘方式结束选择
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "Alt") alt_press_flag = false;
-      if (e.key === "Control") ctrl_press_flag = false;
-      if (e.key === "Shift") shift_press_flag = false;
-      if (e.key === "Meta") meta_press_flag = false;
+      // 事件3 - 键盘方式结束选择
+      document.addEventListener("keyup", (e) => {
+        if (e.key === "Alt") alt_press_flag = false;
+        if (e.key === "Control") ctrl_press_flag = false;
+        if (e.key === "Shift") shift_press_flag = false;
+        if (e.key === "Meta") meta_press_flag = false;
 
-      // 仅限 Shift/Ctrl/Alt/Meta 组合键
-      if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt" && e.key !== "Meta") return;
+        // 仅限 Shift/Ctrl/Alt/Meta 组合键
+        if (e.key !== "Shift" && e.key !== "Control" && e.key !== "Alt" && e.key !== "Meta") return;
 
-      if (updateSelectionInfo()) sendSelectionToApp();
-    });
+        if (updateSelectionInfo()) sendSelectionToApp();
+      });
 
-    // 事件4 - 鼠标方式结束选择
-    document.addEventListener("mouseup", (e) => {
-      // 仅限鼠标左键，且没有按下 Shift/Ctrl/Alt/Meta 组合键
-      if (e.button !== 0) return;
-      if (alt_press_flag || ctrl_press_flag || shift_press_flag || meta_press_flag) return;
+      // 事件4 - 鼠标方式结束选择
+      document.addEventListener("mouseup", (e) => {
+        console.log("Mouse up event:", { button: e.button, altKey: e.altKey, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, metaKey: e.metaKey });
+        // 仅限鼠标左键，且没有按下 Shift/Ctrl/Alt/Meta 组合键
+        if (e.button !== 0) return;
+        if (alt_press_flag || ctrl_press_flag || shift_press_flag || meta_press_flag) return;
 
-      if (updateSelectionInfo()) sendSelectionToApp();
-    });
+        if (updateSelectionInfo()) sendSelectionToApp();
+      });
 
-    // 事件5 - 鼠标双击方式结束选择
-    // document.addEventListener("dblclick", (e) => {})
+      // 事件5 - 鼠标双击方式结束选择
+      // document.addEventListener("dblclick", (e) => {})
 
-    if (option.is_debug) console.log("[AnyMenu Bridge] App communication bridge initialized.");
+      if (option.is_debug) console.log("[AnyMenu Bridge] App communication bridge initialized.");
+    }
   }
 })();

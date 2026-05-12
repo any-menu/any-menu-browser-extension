@@ -9,21 +9,21 @@
 {
   // 配置页
   "options_ui": {
-    "page": "src/options/options.html",
+    "page": "...",
     "open_in_tab": false
   },
 
   // 后台脚本
   "background": {
-    "service_worker": "src/background/background.js",  // Chrome 和 Firefox 121+
-    "scripts": ["src/background/background.js"]        // 兼容Firefox 109 - 120 使用非持久的后台脚本
+    "service_worker": "...",  // Chrome 和 Firefox 121+
+    "scripts": ["..."]        // 兼容Firefox 109 - 120 使用非持久的后台脚本
   },
 
   // 内容脚本
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content/debug.js", "src/content/bridge.js", "src/content/main.js"]
+      "js": ["..."]
     }
   ]
 }
